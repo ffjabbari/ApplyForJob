@@ -6,403 +6,377 @@
   <title>Architecture — JobHunter AI</title>
   <link rel="stylesheet" href="styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+  <style>
+    .status-pill { display:inline-block; padding:3px 12px; border-radius:20px; font-size:0.75rem; font-weight:600; margin-left:8px; }
+    .done  { background:rgba(27,94,32,0.5);  color:#81c784; border:1px solid rgba(100,255,160,0.3); }
+    .wip   { background:rgba(21,101,192,0.5);color:#90caf9; border:1px solid rgba(100,160,255,0.3); }
+    .next  { background:rgba(50,30,0,0.5);   color:#ffd54f; border:1px solid rgba(255,200,50,0.3); }
+  </style>
 </head>
 <body>
 
 <a class="back" href="index.html">← Back to Portal</a>
 <h1 class="page-title">🏗️ System Architecture</h1>
-<p class="subtitle">JobHunter AI — Full Technical Design &amp; Data Flow</p>
+<p class="subtitle">JobHunter AI — Full Technical Design &amp; Current State (April 2026)</p>
 
-<!-- ── OVERVIEW ── -->
-<div class="section">
-  <h2>📐 System Overview</h2>
-  <p style="color:#90a4ae;font-size:0.88rem;line-height:1.7;margin-bottom:16px;">
-    JobHunter AI is a personal job hunting automation system. It scans the internet daily for job postings
-    matching your profile and domain, builds tailored resumes using AI, and automatically submits applications.
-    The system is domain-driven — everything is scoped to the active domain (University, Bank, Insurance, etc.).
+<!-- STATUS BANNER -->
+<div class="section green">
+  <h2>📍 Current Build Status</h2>
+  <ul>
+    <li><strong>Phase 1 — Core System</strong> <span class="status-pill done">✓ LIVE</span> — Backend, frontend, DB, resume builder all running locally</li>
+    <li><strong>Phase 2 — Job Finder Agent</strong> <span class="status-pill wip">▶ IN DESIGN</span> — Agentic Q&amp;A, voice interface, auto-discovery</li>
+    <li><strong>Phase 3 — Real Scrapers</strong> <span class="status-pill next">◷ NEXT</span> — LinkedIn, Indeed, HigherEdJobs live scraping</li>
+    <li><strong>Phase 4 — Auto Apply</strong> <span class="status-pill next">◷ NEXT</span> — Email + web form submission pipeline</li>
+  </ul>
+  <p style="color:#90a4ae;font-size:0.85rem;margin-top:14px;">
+    Running on: <strong style="color:#e0e0e0;">MacBook Pro · /Users/fjabbari/REPO_AI/ApplyForJob</strong> &nbsp;|&nbsp;
+    Git: <strong style="color:#e0e0e0;">github.com/ffjabbari/ApplyForJob · branch: master</strong> &nbsp;|&nbsp;
+    Start: <code style="font-size:0.8rem;">uvicorn backend.main:app --reload</code> + <code style="font-size:0.8rem;">cd frontend && npm run dev</code>
   </p>
+</div>
+
+<!-- SYSTEM OVERVIEW -->
+<div class="section">
+  <h2>📐 System Overview — Phase 1 + Phase 2</h2>
   <div class="mermaid-wrap">
     <div class="mermaid">
 graph TB
-    User["👤 User (Fred Jabbari)"]
+    User["👤 Fred F. Jabbari\nSt. Louis, MO"]
 
-    subgraph Frontend["React Frontend (Vite)"]
+    subgraph Frontend["React 18 + Vite (port 5173)"]
+        UI_Agent["🤖 Job Finder Agent\n(Phase 2 — chat + voice)"]
         UI_Domain["Domain Selector"]
         UI_Jobs["Job Board"]
         UI_Resume["Resume Builder"]
         UI_Apply["Application Tracker"]
         UI_Profile["Profile Manager"]
-        UI_Inst["Institution Search"]
+        UI_Inst["Institutions"]
     end
 
-    subgraph Backend["Python Backend (FastAPI)"]
+    subgraph Backend["Python 3.10 + FastAPI (port 8000)"]
         API["REST API Layer"]
+        AgentSvc["Job Finder Agent Service\n(Phase 2)"]
         DomainSvc["Domain Service"]
         JobSvc["Job Scanner Service"]
-        ResumeSvc["Resume Builder Service"]
+        ResumeSvc["Resume Builder\n✓ GPT-4o-mini LIVE"]
         ApplySvc["Auto-Apply Service"]
         ProfileSvc["Profile Service"]
         InstSvc["Institution Service"]
-        Scheduler["APScheduler (Daily Jobs)"]
+        Scheduler["APScheduler\n(daily 7AM scan)"]
     end
 
-    subgraph Data["Data Layer"]
-        DB[("SQLite Database")]
-        FileStore["File Store (PDFs/DOCX)"]
+    subgraph Data["Data Layer · SQLite"]
+        DB[("jobhunter.db\ndata/jobhunter.db")]
+        FileStore["data/resumes/\n(PDF + DOCX)"]
     end
 
     subgraph External["External Services"]
-        WebScraper["Web Scraper (job boards)"]
-        LLM["LLM API (resume/cover letter)"]
-        EmailSvc["Email Service (SMTP)"]
-        JobBoards["Job Boards (LinkedIn, Indeed, etc.)"]
+        GPT["OpenAI GPT-4o-mini\n✓ LIVE"]
+        Tavily["Tavily Web Search\n(Phase 2)"]
+        Scrapers["Job Board Scrapers\nLinkedIn · Indeed · HigherEdJobs\n(Phase 3)"]
+        SMTP["SMTP Email\n(Phase 4)"]
     end
 
     User --> Frontend
     Frontend --> API
+    UI_Agent --> AgentSvc
     API --> DomainSvc & JobSvc & ResumeSvc & ApplySvc & ProfileSvc & InstSvc
-    Scheduler --> JobSvc & ApplySvc
-    JobSvc --> WebScraper --> JobBoards
-    ResumeSvc --> LLM
-    ApplySvc --> EmailSvc
-    DomainSvc & JobSvc & ResumeSvc & ApplySvc & ProfileSvc & InstSvc --> DB
+    AgentSvc --> GPT & Tavily
+    AgentSvc --> API
+    Scheduler --> JobSvc
+    JobSvc --> Scrapers
+    ResumeSvc --> GPT
     ResumeSvc --> FileStore
+    ApplySvc --> SMTP
+    DomainSvc & JobSvc & ResumeSvc & ApplySvc & ProfileSvc & InstSvc --> DB
     </div>
   </div>
 </div>
 
-<!-- ── TECH STACK ── -->
+<!-- TECH STACK -->
 <div class="section green">
-  <h2>🛠️ Technology Stack</h2>
+  <h2>🛠️ Actual Technology Stack (as built)</h2>
   <ul>
-    <li><strong>Frontend:</strong> React 18 + Vite, React Router, Axios, TailwindCSS</li>
-    <li><strong>Backend:</strong> Python 3.11+, FastAPI, SQLAlchemy ORM, Pydantic v2</li>
-    <li><strong>Database:</strong> SQLite (via SQLAlchemy), Alembic for migrations</li>
-    <li><strong>Scheduler:</strong> APScheduler — daily job scans at configurable time</li>
-    <li><strong>Web Scraping:</strong> Playwright + BeautifulSoup4 for job board scraping</li>
-    <li><strong>AI / LLM:</strong> OpenAI API (GPT-4) or local Ollama for resume tailoring</li>
-    <li><strong>Document Export:</strong> python-docx (DOCX), WeasyPrint (PDF)</li>
-    <li><strong>Email:</strong> smtplib / SendGrid for application submission</li>
-    <li><strong>Auth:</strong> Single-user, local JWT token (no cloud auth needed)</li>
+    <li><strong>Frontend:</strong> React 18 + Vite 5, React Router 6, Axios — <span class="status-pill done">✓ LIVE</span></li>
+    <li><strong>Backend:</strong> Python 3.10, FastAPI 0.111, SQLAlchemy 2.0, Pydantic v2 — <span class="status-pill done">✓ LIVE</span></li>
+    <li><strong>Database:</strong> SQLite via SQLAlchemy — local at <code>data/jobhunter.db</code> — <span class="status-pill done">✓ LIVE</span></li>
+    <li><strong>Scheduler:</strong> APScheduler — daily job scan at 7:00 AM — <span class="status-pill done">✓ LIVE</span></li>
+    <li><strong>AI / LLM:</strong> OpenAI GPT-4o-mini — resume + cover letter generation — <span class="status-pill done">✓ LIVE</span></li>
+    <li><strong>PDF Export:</strong> ReportLab (replaced WeasyPrint — no system deps) — <span class="status-pill done">✓ LIVE</span></li>
+    <li><strong>DOCX Export:</strong> python-docx — <span class="status-pill done">✓ LIVE</span></li>
+    <li><strong>Web Scraping:</strong> Playwright + BeautifulSoup4 — scrapers coded, not yet live — <span class="status-pill next">◷ Phase 3</span></li>
+    <li><strong>Agent Web Search:</strong> Tavily API — <span class="status-pill wip">▶ Phase 2</span></li>
+    <li><strong>Voice Interface:</strong> Web Speech API (browser) + OpenAI Whisper — <span class="status-pill wip">▶ Phase 2</span></li>
+    <li><strong>Email:</strong> smtplib / SMTP — coded, not yet wired to UI — <span class="status-pill next">◷ Phase 4</span></li>
+    <li><strong>Env Config:</strong> python-dotenv — <code>.env</code> file (gitignored) — <span class="status-pill done">✓ LIVE</span></li>
   </ul>
 </div>
 
-<!-- ── DOMAIN FLOW ── -->
+<!-- DOMAIN FLOW -->
 <div class="section gold">
   <h2>🌐 Domain-Driven Flow</h2>
-  <p style="color:#90a4ae;font-size:0.88rem;margin-bottom:16px;">
-    The Domain is the top-level context. Every module — job search, resume, institutions — is filtered by the active domain.
-  </p>
   <div class="mermaid-wrap">
     <div class="mermaid">
 flowchart LR
     SelectDomain["Select Domain\n(University / Bank / Insurance\nPharma / Tech / Other)"]
-    --> ActiveDomain[("Active Domain\nStored in Session + DB")]
-
+    --> ActiveDomain[("Active Domain\nin SQLite DB")]
     ActiveDomain --> JobSearch["Job Scanner\nfiltered by domain"]
     ActiveDomain --> InstSearch["Institution Search\nfiltered by domain"]
-    ActiveDomain --> ResumeGen["Resume Builder\ntailored to domain"]
-    ActiveDomain --> AutoApply["Auto Apply\nscoped to domain jobs"]
-
+    ActiveDomain --> ResumeGen["Resume Builder\nGPT-4o-mini tailored"]
+    ActiveDomain --> AutoApply["Auto Apply\nscoped to domain"]
     JobSearch & InstSearch & ResumeGen & AutoApply --> Results["Domain-Scoped Results"]
     </div>
   </div>
 </div>
 
-<!-- ── JOB SCANNER FLOW ── -->
-<div class="section teal">
-  <h2>🔍 Job Scanner — Daily Automation Flow</h2>
+<!-- RESUME BUILDER — ACTUAL FLOW -->
+<div class="section purple">
+  <h2>📝 Resume Builder — Actual Flow (GPT-4o-mini) <span class="status-pill done">✓ LIVE</span></h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+flowchart TD
+    Profile["User Profile\n(name, bio, skills, experience)\nfrom SQLite"]
+    JobPost["Selected Job Posting\n(title, description, location)\nfrom SQLite"]
+
+    Profile & JobPost --> Prompt["Build LLM Prompt\nresume_builder.py"]
+    Prompt --> GPT["OpenAI GPT-4o-mini\nJSON response_format"]
+    GPT --> Content["JSON: summary, skills,\nexperience, cover_letter"]
+    Content --> DOCX["python-docx → .docx\ndata/resumes/resume_N.docx"]
+    Content --> PDF["ReportLab → .pdf\ndata/resumes/resume_N.pdf"]
+    Content --> DB2[("Save to resumes table\nSQLite")]
+    DB2 --> UI["Resumes page\nView ▼ expand · PDF · DOCX"]
+    </div>
+  </div>
+</div>
+
+<!-- AGENT VISION — PHASE 2 -->
+<div class="section red">
+  <h2>🤖 Job Finder Agent — Phase 2 Design <span class="status-pill wip">▶ IN DESIGN</span></h2>
+  <p style="color:#90a4ae;font-size:0.87rem;margin-bottom:14px;">
+    The agent interviews the user by voice and text, then autonomously calls this system's own APIs
+    as GPT function-calling tools. It discovers institutions and jobs mid-conversation, builds resumes,
+    drafts emails, and presents a review queue. The user approves and submits. See
+    <a href="agent_vision.html" style="color:#ef9a9a;">agent_vision.html</a> for full spec.
+  </p>
   <div class="mermaid-wrap">
     <div class="mermaid">
 sequenceDiagram
-    participant Scheduler as APScheduler
-    participant Scanner as Job Scanner Service
-    participant Scraper as Web Scraper
-    participant Boards as Job Boards
-    participant DB as SQLite DB
-    participant UI as React Frontend
+    participant User
+    participant Agent as Job Finder Agent (GPT-4o-mini + tools)
+    participant OwnAPI as System APIs (FastAPI)
+    participant Web as Tavily Web Search
 
-    Scheduler->>Scanner: Trigger daily scan (configurable time)
-    Scanner->>DB: Load active domains + search keywords
-    Scanner->>Scraper: Request jobs for each domain/keyword
-    Scraper->>Boards: Scrape LinkedIn, Indeed, HigherEdJobs, etc.
-    Boards-->>Scraper: Raw job listings
-    Scraper-->>Scanner: Parsed job objects
-    Scanner->>DB: Deduplicate + store new jobs
-    Scanner->>DB: Mark stale jobs as expired
-    Scanner-->>UI: Notify new jobs available (websocket/poll)
-    UI->>DB: Fetch new job listings
+    User->>Agent: "I want to teach CS at a university"
+    Agent->>Web: search_jobs("CS adjunct professor St Louis")
+    Agent->>Web: search_institutions("university CS hiring 2026")
+    Web-->>Agent: UCLA, WashU, UMSL found
+    Agent->>OwnAPI: POST /api/institutions/ (UCLA, WashU, UMSL)
+    Agent->>OwnAPI: POST /api/jobs/ (3 jobs)
+    Agent-->>User: "Added 3 institutions + 3 jobs. Tell me your background."
+    User->>Agent: "20 years software, CS + MBA"
+    Agent->>OwnAPI: PUT /api/profile/ (update skills)
+    Agent->>OwnAPI: POST /api/resumes/build (x3)
+    Agent->>OwnAPI: POST /api/applications/draft (x3)
+    Agent-->>User: "3 resumes + emails ready for review"
+    User->>Agent: "Approve UCLA"
+    Agent->>OwnAPI: POST /api/applications/submit
+    Agent-->>User: "✅ Submitted to UCLA"
     </div>
   </div>
 </div>
 
-<!-- ── RESUME BUILDER FLOW ── -->
-<div class="section purple">
-  <h2>📝 Resume Builder Flow</h2>
-  <div class="mermaid-wrap">
-    <div class="mermaid">
-flowchart TD
-    Profile["User Profile\n(skills, experience, education)"]
-    JobPost["Selected Job Posting\n(title, description, requirements)"]
-    Domain["Active Domain\n(University / Bank / etc.)"]
-
-    Profile & JobPost & Domain --> LLM["LLM Prompt Engine\n(GPT-4 / Ollama)"]
-
-    LLM --> Draft["Generated Resume Draft\n+ Cover Letter"]
-    Draft --> Review["User Reviews & Edits\nin React UI"]
-    Review --> Export["Export Options"]
-    Export --> PDF["PDF Download"]
-    Export --> DOCX["DOCX Download"]
-    Export --> DB2[("Save to DB\n+ File Store")]
-    DB2 --> AutoApply["Ready for Auto-Apply"]
-    </div>
-  </div>
-</div>
-
-<!-- ── AUTO APPLY FLOW ── -->
-<div class="section red">
-  <h2>🚀 Auto-Apply Flow</h2>
-  <div class="mermaid-wrap">
-    <div class="mermaid">
-flowchart TD
-    Jobs["New Jobs in DB\n(status: new)"]
-    --> Filter["Filter: matches user\npreferences + domain"]
-    --> Approve{{"User Approval\nRequired?"}}
-
-    Approve -- "Auto mode ON" --> BuildResume["Build Tailored Resume\n+ Cover Letter"]
-    Approve -- "Manual mode" --> UserReview["User Reviews Job\nin UI"]
-    UserReview -- "Approved" --> BuildResume
-
-    BuildResume --> Method{{"Application\nMethod"}}
-    Method -- "Email" --> SendEmail["Send Email\nwith Resume attached"]
-    Method -- "Web Form" --> FormFill["Playwright fills\nonline application form"]
-    Method -- "Portal" --> PortalLink["Open portal URL\nfor manual submission"]
-
-    SendEmail & FormFill --> UpdateDB["Update DB:\nstatus = applied\ndate + method logged"]
-    UpdateDB --> Track["Application Tracker\nin React UI"]
-    </div>
-  </div>
-</div>
-
-<!-- ── DATABASE SCHEMA ── -->
+<!-- DATABASE SCHEMA -->
 <div class="section">
-  <h2>🗄️ Database Schema (ERD)</h2>
+  <h2>🗄️ Database Schema — Phase 1 (live) + Phase 2 (planned)</h2>
   <div class="mermaid-wrap">
     <div class="mermaid">
 erDiagram
-    USERS {
-        int id PK
-        string name
-        string email
-        string phone
-        text bio
-        datetime created_at
-    }
-    DOMAINS {
-        int id PK
-        string name
-        string description
-        bool is_active
-        datetime created_at
-    }
-    INSTITUTIONS {
-        int id PK
-        int domain_id FK
-        string name
-        string website
-        string location
-        string type
-        bool is_favorite
-        datetime created_at
-    }
-    JOBS {
-        int id PK
-        int domain_id FK
-        int institution_id FK
-        string title
-        text description
-        string location
-        string url
-        string status
-        date posted_date
-        date expires_date
-        datetime scanned_at
-    }
-    RESUMES {
-        int id PK
-        int user_id FK
-        int job_id FK
-        string version
-        text content_json
-        string pdf_path
-        string docx_path
-        datetime created_at
-    }
-    APPLICATIONS {
-        int id PK
-        int user_id FK
-        int job_id FK
-        int resume_id FK
-        string status
-        string method
-        datetime applied_at
-        text notes
-    }
-    SCAN_HISTORY {
-        int id PK
-        int domain_id FK
-        datetime scan_time
-        int jobs_found
-        int jobs_new
-        string status
-    }
-    PROFILE_SKILLS {
-        int id PK
-        int user_id FK
-        string skill
-        string level
-    }
-    PROFILE_EXPERIENCE {
-        int id PK
-        int user_id FK
-        string company
-        string title
-        date start_date
-        date end_date
-        text description
-    }
+    USERS { int id PK; string name; string email; string phone; text bio }
+    DOMAINS { int id PK; string name; string description; bool is_active }
+    INSTITUTIONS { int id PK; int domain_id FK; string name; string website; string location; bool is_favorite }
+    JOBS { int id PK; int domain_id FK; int institution_id FK; string title; text description; string url; string status; date posted_date }
+    RESUMES { int id PK; int user_id FK; int job_id FK; string version; text content_json; string pdf_path; string docx_path }
+    APPLICATIONS { int id PK; int user_id FK; int job_id FK; int resume_id FK; string status; string method; datetime applied_at; text notes }
+    SCAN_HISTORY { int id PK; int domain_id FK; datetime scan_time; int jobs_found; int jobs_new }
+    PROFILE_SKILLS { int id PK; int user_id FK; string skill; string level }
+    PROFILE_EXPERIENCE { int id PK; int user_id FK; string company; string title; string start_date; string end_date; text description }
+    INTERVIEW_SESSIONS { int id PK; int user_id FK; string status; datetime started_at }
+    INTERVIEW_MESSAGES { int id PK; int session_id FK; string role; text content; text discoveries_json }
+    RESUME_TEMPLATES { int id PK; string name; string domain; text questions_json }
 
     USERS ||--o{ RESUMES : creates
     USERS ||--o{ APPLICATIONS : submits
     USERS ||--o{ PROFILE_SKILLS : has
     USERS ||--o{ PROFILE_EXPERIENCE : has
+    USERS ||--o{ INTERVIEW_SESSIONS : starts
     DOMAINS ||--o{ INSTITUTIONS : contains
     DOMAINS ||--o{ JOBS : has
-    DOMAINS ||--o{ SCAN_HISTORY : tracks
     INSTITUTIONS ||--o{ JOBS : posts
     JOBS ||--o{ RESUMES : generates
     JOBS ||--o{ APPLICATIONS : receives
     RESUMES ||--o{ APPLICATIONS : used_in
+    INTERVIEW_SESSIONS ||--o{ INTERVIEW_MESSAGES : contains
+    RESUME_TEMPLATES ||--o{ INTERVIEW_SESSIONS : drives
     </div>
   </div>
 </div>
 
-<!-- ── FOLDER STRUCTURE ── -->
+<!-- FOLDER STRUCTURE -->
 <div class="section orange">
-  <h2>📁 Project Folder Structure</h2>
+  <h2>📁 Actual Project Folder Structure</h2>
   <pre>
-ApplyForJob/
-├── Docs/                        # Architecture & design docs (this folder)
-│   ├── index.html
-│   ├── styles.css
-│   ├── architecture.html
-│   └── ...
-├── backend/                     # Python FastAPI backend
-│   ├── main.py                  # FastAPI app entry point
-│   ├── database.py              # SQLAlchemy setup
-│   ├── models/                  # DB models
-│   │   ├── user.py
-│   │   ├── domain.py
-│   │   ├── job.py
-│   │   ├── institution.py
-│   │   ├── resume.py
-│   │   └── application.py
-│   ├── routers/                 # API route handlers
-│   │   ├── domains.py
-│   │   ├── jobs.py
-│   │   ├── institutions.py
-│   │   ├── resumes.py
-│   │   ├── applications.py
-│   │   └── profile.py
-│   ├── services/                # Business logic
-│   │   ├── job_scanner.py       # Web scraping + dedup
-│   │   ├── resume_builder.py    # LLM integration
-│   │   ├── auto_apply.py        # Application submission
-│   │   └── scheduler.py         # APScheduler setup
-│   ├── scrapers/                # Per-site scrapers
-│   │   ├── linkedin.py
-│   │   ├── indeed.py
-│   │   ├── higheredjobs.py
-│   │   └── base_scraper.py
+ApplyForJob/                         # /Users/fjabbari/REPO_AI/ApplyForJob
+├── Docs/                            # ← YOU ARE HERE — living project brain
+│   ├── index.html                   # Portal with all cards
+│   ├── styles.css                   # Shared dark theme
+│   ├── architecture.html            # This file — full system design
+│   ├── agent_vision.html            # Phase 2 — agentic workflow spec
+│   └── self_learning.html           # Phase 2 — self-learning interview spec
+│
+├── backend/                         # Python FastAPI backend
+│   ├── main.py                      # App entry + CORS + lifespan
+│   ├── database.py                  # SQLAlchemy engine + session + init_db
+│   ├── seed.py                      # Creates user + 6 domains
+│   ├── seed_jobs.py                 # Seeds 6 sample University jobs
+│   ├── models/
+│   │   ├── user.py                  # User, ProfileSkill, ProfileExperience
+│   │   ├── domain.py                # Domain
+│   │   ├── institution.py           # Institution
+│   │   ├── job.py                   # Job, ScanHistory
+│   │   ├── resume.py                # Resume
+│   │   └── application.py          # Application
+│   ├── routers/
+│   │   ├── domains.py · jobs.py · institutions.py
+│   │   ├── resumes.py · applications.py · profile.py
+│   ├── services/
+│   │   ├── resume_builder.py        # ✓ GPT-4o-mini LIVE
+│   │   ├── job_scanner.py           # Stub — Phase 3
+│   │   ├── auto_apply.py            # Stub — Phase 4
+│   │   └── scheduler.py             # APScheduler 7AM daily
+│   ├── scrapers/
+│   │   ├── base_scraper.py · linkedin.py · indeed.py · higheredjobs.py
 │   └── requirements.txt
-├── frontend/                    # React + Vite frontend
+│
+├── frontend/                        # React 18 + Vite
 │   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── JobBoard.jsx
-│   │   │   ├── ResumeBuilder.jsx
-│   │   │   ├── Applications.jsx
-│   │   │   ├── Institutions.jsx
-│   │   │   └── Profile.jsx
-│   │   ├── App.jsx
-│   │   └── main.jsx
+│   │   ├── App.jsx                  # Router + sidebar nav
+│   │   ├── api.js                   # Axios API client
+│   │   ├── index.css                # Dark theme styles
+│   │   └── pages/
+│   │       ├── Dashboard.jsx        # Domain switcher + new jobs
+│   │       ├── JobBoard.jsx         # Job list + build resume
+│   │       ├── ResumeBuilder.jsx    # Resume list + expand view
+│   │       ├── Applications.jsx     # Application tracker
+│   │       ├── Institutions.jsx     # Institution manager
+│   │       └── Profile.jsx          # Skills + experience editor
 │   ├── package.json
-│   └── vite.config.js
+│   └── vite.config.js               # Proxy /api → localhost:8000
+│
 ├── data/
-│   └── jobhunter.db             # SQLite database
+│   ├── jobhunter.db                 # SQLite (gitignored — local only)
+│   └── resumes/                     # Generated PDFs + DOCX (gitignored)
+│
+├── .env                             # OPENAI_API_KEY etc (gitignored)
+├── .gitignore
 └── README.md
   </pre>
 </div>
 
-<!-- ── API ENDPOINTS ── -->
+<!-- API REFERENCE -->
 <div class="section">
-  <h2>⚡ Key API Endpoints</h2>
+  <h2>⚡ API Endpoints — Phase 1 (all live)</h2>
   <pre>
-# Domains
-GET    /api/domains              # List all domains
-POST   /api/domains              # Create domain
-PUT    /api/domains/{id}/activate # Set active domain
+GET    /api/domains/                    List all domains
+POST   /api/domains/                    Create domain
+PUT    /api/domains/{id}/activate       Set active domain
+DELETE /api/domains/{id}                Delete domain
 
-# Jobs
-GET    /api/jobs                 # List jobs (filtered by active domain)
-GET    /api/jobs/{id}            # Job detail
-POST   /api/jobs/scan            # Trigger manual scan
-GET    /api/jobs/new             # Jobs found since last visit
+GET    /api/jobs/                       List jobs (active domain filtered)
+GET    /api/jobs/new                    New jobs only
+GET    /api/jobs/{id}                   Job detail
+POST   /api/jobs/scan                   Trigger background scan
+PUT    /api/jobs/{id}/status            Update job status
 
-# Institutions
-GET    /api/institutions         # List institutions in active domain
-POST   /api/institutions         # Add institution
-PUT    /api/institutions/{id}/favorite  # Toggle favorite
+GET    /api/institutions/               List institutions (active domain)
+POST   /api/institutions/               Add institution
+PUT    /api/institutions/{id}/favorite  Toggle favorite
+DELETE /api/institutions/{id}           Delete
 
-# Resume
-POST   /api/resumes/build        # Generate resume for a job
-GET    /api/resumes/{id}/pdf     # Download PDF
-GET    /api/resumes/{id}/docx    # Download DOCX
+POST   /api/resumes/build               Build resume via GPT-4o-mini ✓
+GET    /api/resumes/                    List all resumes
+GET    /api/resumes/{id}                Get resume
+GET    /api/resumes/{id}/pdf            Download PDF
+GET    /api/resumes/{id}/docx           Download DOCX
 
-# Applications
-GET    /api/applications         # List all applications
-POST   /api/applications         # Submit application
-PUT    /api/applications/{id}    # Update status/notes
+GET    /api/applications/               List applications
+POST   /api/applications/               Create application
+PUT    /api/applications/{id}           Update status/notes
 
-# Profile
-GET    /api/profile              # Get user profile
-PUT    /api/profile              # Update profile
-POST   /api/profile/skills       # Add skill
-POST   /api/profile/experience   # Add experience
+GET    /api/profile/                    Get user profile
+PUT    /api/profile/                    Update profile
+GET    /api/profile/skills              List skills
+POST   /api/profile/skills              Add skill
+DELETE /api/profile/skills/{id}         Delete skill
+GET    /api/profile/experience          List experience
+POST   /api/profile/experience          Add experience
   </pre>
 </div>
 
-<!-- ── KIRO PROMPT ── -->
+<!-- PROGRESS CHART -->
 <div class="section teal">
-  <h2>🤖 Kiro Build Prompt</h2>
+  <h2>📊 Build Progress by Module</h2>
+  <canvas id="progressChart" style="max-height:300px;margin-top:14px;"></canvas>
+  <script>
+    new Chart(document.getElementById('progressChart'), {
+      type: 'bar',
+      data: {
+        labels: ['FastAPI Backend','SQLite Models','React Frontend','GPT Resume Builder','APScheduler','Job Scrapers','Job Finder Agent','Voice Interface','Auto Apply','Web Search'],
+        datasets: [{
+          label: '% Complete',
+          data: [100, 100, 95, 100, 100, 15, 5, 0, 20, 0],
+          backgroundColor: ['#43a047','#43a047','#1e88e5','#43a047','#43a047','#fdd835','#7c83fd','#7c83fd','#fdd835','#7c83fd'],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { max: 100, ticks: { color:'#90a4ae', callback: v => v+'%' }, grid: { color:'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color:'#90a4ae', font: { size: 11 } }, grid: { display: false } }
+        }
+      }
+    });
+  </script>
+</div>
+
+<!-- KIRO RESUME PROMPT -->
+<div class="section purple">
+  <h2>🤖 Kiro Session Resume Prompt</h2>
   <div class="prompt-box">
-    <strong>Use this prompt to start coding with Kiro:</strong>
-    Build the JobHunter AI system based on this architecture document.
-    Start with: 1) Backend FastAPI skeleton with SQLAlchemy models and all routers.
-    2) React frontend with Vite, React Router, and page stubs for all modules.
-    3) SQLite database with all tables from the ERD.
-    4) Job scanner service with APScheduler.
-    5) Resume builder service with LLM integration.
-    The system is domain-driven — active domain scopes all queries.
-    User profile: Fred F. Jabbari, St. Louis MO, software/finance/real estate background.
-    First target domain: University (part-time teaching positions).
+    <strong>Paste this to resume work with Kiro in a new session:</strong>
+    I am building JobHunter AI — a personal job hunting automation system.
+    Phase 1 is COMPLETE and running locally on my Mac at /Users/fjabbari/REPO_AI/ApplyForJob.
+    Git: github.com/ffjabbari/ApplyForJob, branch: master.
+
+    Stack: Python 3.10 + FastAPI backend (port 8000), React 18 + Vite frontend (port 5173),
+    SQLite at data/jobhunter.db, GPT-4o-mini for resume building (LIVE and working),
+    APScheduler for daily scans, ReportLab for PDF, python-docx for DOCX.
+
+    Phase 2 is next: Job Finder Agent — a conversational AI (voice + text) that interviews
+    the user, autonomously calls system APIs as GPT function-calling tools (add_institution,
+    add_job, build_resume, draft_email, submit_application), discovers jobs/institutions via
+    Tavily web search mid-conversation, and presents a review queue before submission.
+
+    Read Docs/architecture.html for full system state and Docs/agent_vision.html for Phase 2 spec.
+    Start Phase 2 now.
   </div>
 </div>
 
 <footer>
-  <p>JobHunter AI &nbsp;|&nbsp; Architecture v1.0 &nbsp;|&nbsp; Built with Kiro AI</p>
+  <p>JobHunter AI &nbsp;|&nbsp; Architecture v2.0 &nbsp;|&nbsp; Updated April 2026 &nbsp;|&nbsp; Built with Kiro AI</p>
 </footer>
 </body>
 </html>
