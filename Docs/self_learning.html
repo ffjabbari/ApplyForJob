@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Self-Learning Phase — JobHunter AI</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+  <style>
+    .chat-demo { background:#060d18; border-radius:12px; padding:20px; margin-top:14px; }
+    .msg { display:flex; gap:12px; margin-bottom:16px; align-items:flex-start; }
+    .msg.ai  { flex-direction:row; }
+    .msg.user{ flex-direction:row-reverse; }
+    .avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .avatar.ai-av   { background:linear-gradient(135deg,#1565c0,#7c83fd); }
+    .avatar.user-av { background:linear-gradient(135deg,#1b5e20,#43a047); }
+    .bubble { max-width:75%; padding:12px 16px; border-radius:14px; font-size:0.85rem; line-height:1.65; }
+    .msg.ai   .bubble { background:#0d1b2a; border:1px solid rgba(100,160,255,0.2); color:#cfd8dc; border-radius:4px 14px 14px 14px; }
+    .msg.user .bubble { background:#0d3320; border:1px solid rgba(100,255,160,0.2); color:#c8e6c9; border-radius:14px 4px 14px 14px; }
+    .suggestion { background:rgba(21,101,192,0.2); border:1px solid rgba(100,160,255,0.3); border-radius:10px; padding:10px 14px; margin-top:10px; font-size:0.82rem; color:#90caf9; }
+    .suggestion strong { color:#fff; }
+    .template-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-top:14px; }
+    .template-card { background:#060d18; border:1px solid rgba(100,160,255,0.2); border-radius:10px; padding:14px; text-align:center; cursor:pointer; transition:border-color 0.2s; }
+    .template-card:hover { border-color:#7c83fd; }
+    .template-card .t-icon { font-size:2rem; margin-bottom:8px; }
+    .template-card .t-name { font-size:0.85rem; color:#90caf9; font-weight:600; }
+    .template-card .t-qs { font-size:0.75rem; color:#546e7a; margin-top:4px; }
+    .phase-badge { display:inline-block; padding:4px 14px; border-radius:20px; font-size:0.75rem; font-weight:600; margin-right:8px; }
+    .phase-badge.done  { background:rgba(27,94,32,0.5); color:#81c784; border:1px solid rgba(100,255,160,0.3); }
+    .phase-badge.active{ background:rgba(21,101,192,0.5); color:#90caf9; border:1px solid rgba(100,160,255,0.3); }
+    .phase-badge.next  { background:rgba(50,30,0,0.5); color:#ffd54f; border:1px solid rgba(255,200,50,0.3); }
+  </style>
+</head>
+<body>
+
+<a class="back" href="index.html">← Back to Portal</a>
+<h1 class="page-title">🧠 Self-Learning Phase</h1>
+<p class="subtitle">JobHunter AI — AI Interview Agent that builds the system through conversation</p>
+
+<!-- STATUS -->
+<div class="section">
+  <h2>📍 Phase Status</h2>
+  <div style="margin-top:8px;">
+    <span class="phase-badge done">✓ Phase 1 — Core System</span>
+    <span class="phase-badge active">▶ Phase 2 — Self-Learning Agent</span>
+    <span class="phase-badge next">◷ Phase 3 — Real Scrapers</span>
+    <span class="phase-badge next">◷ Phase 4 — Auto Apply</span>
+  </div>
+  <p style="color:#90a4ae;font-size:0.87rem;margin-top:16px;line-height:1.7;">
+    Phase 1 is complete and running locally. The backend (FastAPI + SQLite), frontend (React + Vite),
+    resume builder (GPT-4o-mini), and domain system are all live. Phase 2 introduces the
+    <strong style="color:#ce93d8;">AI Interview Agent</strong> — a conversational interface that
+    replaces manual data entry by interviewing the user, discovering jobs and institutions in real time,
+    and self-populating the system from the conversation.
+  </p>
+</div>
+
+<!-- CONCEPT -->
+<div class="section purple">
+  <h2>💡 Core Concept — Conversation-Driven System Building</h2>
+  <p style="color:#90a4ae;font-size:0.87rem;line-height:1.7;margin-bottom:16px;">
+    Instead of the user manually filling forms, the AI Agent interviews the prospect using
+    job-specific templates. As the user answers, the agent simultaneously searches the web,
+    discovers matching institutions and jobs, and proactively suggests adding them to the system.
+    By the end of the session, the resume is built, institutions are populated, and jobs are queued —
+    all from a single conversation.
+  </p>
+  <div class="chat-demo">
+    <div class="msg ai">
+      <div class="avatar ai-av">🤖</div>
+      <div class="bubble">
+        Welcome! I'm going to help you find the perfect teaching position. Let's start with your background.
+        <strong style="color:#ce93d8;">What subjects are you most passionate about teaching?</strong>
+      </div>
+    </div>
+    <div class="msg user">
+      <div class="avatar user-av">👤</div>
+      <div class="bubble">I love teaching software engineering, AI, and cloud architecture. I've been doing it informally for years at work.</div>
+    </div>
+    <div class="msg ai">
+      <div class="avatar ai-av">🤖</div>
+      <div class="bubble">
+        Great answer! Software engineering + AI is a hot combination right now.
+        <div class="suggestion">
+          <strong>🔍 I just found 3 things based on your answer:</strong><br/>
+          • Washington University in St. Louis is hiring an Adjunct in CS/AI<br/>
+          • UMSL has an open "Cloud Computing" lecturer position<br/>
+          • SLU's School of Engineering lists AI as a priority hire for Fall 2026<br/><br/>
+          Want me to add these institutions to your list and queue those jobs?
+        </div>
+      </div>
+    </div>
+    <div class="msg user">
+      <div class="avatar user-av">👤</div>
+      <div class="bubble">Yes, add all three!</div>
+    </div>
+    <div class="msg ai">
+      <div class="avatar ai-av">🤖</div>
+      <div class="bubble">
+        ✅ Added WashU, UMSL, and SLU to your institutions. 3 jobs queued.<br/><br/>
+        <strong style="color:#ce93d8;">Next question: What's your highest degree and field?</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATES -->
+<div class="section gold">
+  <h2>📋 Job Templates — Interview Question Sets</h2>
+  <p style="color:#90a4ae;font-size:0.87rem;margin-bottom:14px;">
+    Each template is a curated set of questions tailored to a job category. The AI uses these
+    to guide the interview, extract relevant skills, and search for matching opportunities.
+  </p>
+  <div class="template-grid">
+    <div class="template-card">
+      <div class="t-icon">🎓</div>
+      <div class="t-name">University Lecturer</div>
+      <div class="t-qs">12 questions · Academic focus</div>
+    </div>
+    <div class="template-card">
+      <div class="t-icon">🏦</div>
+      <div class="t-name">Bank / Finance</div>
+      <div class="t-qs">10 questions · Risk & compliance</div>
+    </div>
+    <div class="template-card">
+      <div class="t-icon">💻</div>
+      <div class="t-name">Tech / Software</div>
+      <div class="t-qs">14 questions · Stack & projects</div>
+    </div>
+    <div class="template-card">
+      <div class="t-icon">🏥</div>
+      <div class="t-name">Pharma / Biotech</div>
+      <div class="t-qs">9 questions · Regulatory focus</div>
+    </div>
+    <div class="template-card">
+      <div class="t-icon">🏠</div>
+      <div class="t-name">Real Estate</div>
+      <div class="t-qs">8 questions · Market & licensing</div>
+    </div>
+    <div class="template-card">
+      <div class="t-icon">🛡️</div>
+      <div class="t-name">Insurance</div>
+      <div class="t-qs">9 questions · Actuarial & claims</div>
+    </div>
+  </div>
+</div>
+
+<!-- FLOW DIAGRAM -->
+<div class="section teal">
+  <h2>🔄 Agent Flow — How the Interview Builds the System</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+flowchart TD
+    Start["User starts Interview Session\n(picks a job template)"]
+    --> Q["AI asks next question\nfrom template"]
+    --> Answer["User answers"]
+    --> Parse["GPT parses answer\nextracts skills, experience, preferences"]
+
+    Parse --> UpdateProfile["Update User Profile\nin DB"]
+    Parse --> WebSearch["Parallel: Search web\nfor matching jobs & institutions"]
+
+    WebSearch --> Found{{"New jobs or\ninstitutions found?"}}
+    Found -- Yes --> Suggest["AI surfaces suggestion mid-chat:\n'I found X — want to add it?'"]
+    Suggest --> UserDecision{{"User says\nYes / No"}}
+    UserDecision -- Yes --> AddToDB["Add institution + jobs to DB"]
+    UserDecision -- No --> NextQ
+    Found -- No --> NextQ
+
+    AddToDB --> NextQ["More questions?"]
+    NextQ -- Yes --> Q
+    NextQ -- No --> BuildResume["Generate tailored resume\nfrom full conversation context"]
+    BuildResume --> SessionComplete["Session complete:\n✅ Profile updated\n✅ Institutions added\n✅ Jobs queued\n✅ Resume ready"]
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="section">
+  <h2>🏗️ Technical Architecture — New Components</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+graph TB
+    subgraph Frontend["React Frontend — New Pages"]
+        InterviewUI["Interview Page\n(chat interface)"]
+        TemplateSelector["Template Selector"]
+        LiveFeed["Live Discovery Feed\n(real-time suggestions)"]
+    end
+
+    subgraph Backend["FastAPI — New Endpoints"]
+        SessionAPI["POST /api/interview/start\nPOST /api/interview/message\nGET  /api/interview/{id}"]
+        AgentSvc["Interview Agent Service\n(GPT-4o-mini with tools)"]
+        DiscoverySvc["Discovery Service\n(web search + institution finder)"]
+    end
+
+    subgraph DB["New DB Tables"]
+        Sessions[("interview_sessions")]
+        Messages[("interview_messages")]
+        Templates[("resume_templates")]
+    end
+
+    subgraph External["External"]
+        GPT["GPT-4o-mini\n(conversation + parsing)"]
+        WebSearch["Web Search API\n(Tavily / SerpAPI)"]
+    end
+
+    InterviewUI --> SessionAPI
+    SessionAPI --> AgentSvc
+    AgentSvc --> GPT
+    AgentSvc --> DiscoverySvc
+    DiscoverySvc --> WebSearch
+    AgentSvc --> Sessions & Messages
+    DiscoverySvc --> DB
+    </div>
+  </div>
+</div>
+
+<!-- DB SCHEMA -->
+<div class="section green">
+  <h2>🗄️ New Database Tables</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+erDiagram
+    INTERVIEW_SESSIONS {
+        int id PK
+        int user_id FK
+        int template_id FK
+        string status
+        datetime started_at
+        datetime completed_at
+    }
+    INTERVIEW_MESSAGES {
+        int id PK
+        int session_id FK
+        string role
+        text content
+        text discoveries_json
+        datetime created_at
+    }
+    RESUME_TEMPLATES {
+        int id PK
+        string name
+        string domain
+        text questions_json
+        text system_prompt
+        datetime created_at
+    }
+
+    INTERVIEW_SESSIONS ||--o{ INTERVIEW_MESSAGES : contains
+    RESUME_TEMPLATES   ||--o{ INTERVIEW_SESSIONS : drives
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS CHART -->
+<div class="section orange">
+  <h2>📊 Build Progress</h2>
+  <canvas id="progressChart" style="max-height:280px;margin-top:14px;"></canvas>
+  <script>
+    new Chart(document.getElementById('progressChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Backend API', 'DB Models', 'Frontend UI', 'Resume Builder', 'Job Scrapers', 'Interview Agent', 'Discovery Service', 'Auto Apply'],
+        datasets: [{
+          label: '% Complete',
+          data: [100, 100, 90, 95, 15, 0, 0, 10],
+          backgroundColor: [
+            '#43a047','#43a047','#1e88e5','#43a047',
+            '#fdd835','#7c83fd','#7c83fd','#fdd835'
+          ],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { max: 100, ticks: { color:'#90a4ae' }, grid: { color:'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color:'#90a4ae' }, grid: { display:false } }
+        }
+      }
+    });
+  </script>
+</div>
+
+<!-- NEW API ENDPOINTS -->
+<div class="section">
+  <h2>⚡ New API Endpoints — Phase 2</h2>
+  <pre>
+# Interview Sessions
+POST   /api/interview/start          # Start session with template_id
+POST   /api/interview/{id}/message   # Send user message, get AI response + discoveries
+GET    /api/interview/{id}           # Get full session history
+GET    /api/interview/{id}/summary   # Get extracted profile + queued jobs
+
+# Resume Templates
+GET    /api/templates                # List all templates
+GET    /api/templates/{id}           # Get template with questions
+POST   /api/templates                # Create custom template
+
+# Discovery (called internally by agent)
+POST   /api/discover/institutions    # Search web for institutions matching query
+POST   /api/discover/jobs            # Search web for jobs matching profile
+  </pre>
+</div>
+
+<!-- KIRO PROMPT -->
+<div class="section purple">
+  <h2>🤖 Kiro Build Prompt — Phase 2</h2>
+  <div class="prompt-box">
+    <strong>Use this prompt to resume Phase 2 with Kiro:</strong>
+    We are building Phase 2 of JobHunter AI — the Self-Learning Interview Agent.
+    The system is already running (Phase 1 complete): FastAPI backend, React frontend,
+    SQLite DB, GPT-4o-mini resume builder, domain system, job board.
+    
+    Phase 2 adds: 1) ResumeTemplate model with per-domain question sets.
+    2) InterviewSession + InterviewMessage models.
+    3) Interview Agent Service — GPT-4o-mini with a system prompt that conducts
+    the interview, parses answers, and calls a Discovery Service in parallel.
+    4) Discovery Service — uses web search (Tavily API) to find matching institutions
+    and jobs based on user answers, returns suggestions mid-conversation.
+    5) React Interview page — chat UI with live discovery feed sidebar.
+    6) The agent proactively suggests adding institutions/jobs found during the interview.
+    
+    Start with: backend models → agent service → API endpoints → React chat UI.
+    Reference: Docs/self_learning.html for full spec and Docs/architecture.html for system context.
+  </div>
+</div>
+
+<footer>
+  <p>JobHunter AI &nbsp;|&nbsp; Self-Learning Phase v1.0 &nbsp;|&nbsp; Built with Kiro AI</p>
+</footer>
+</body>
+</html>
