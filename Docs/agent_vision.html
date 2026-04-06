@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agent Vision — JobHunter AI</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+  <style>
+    .chat-demo { background:#060d18; border-radius:12px; padding:20px; margin-top:14px; }
+    .msg { display:flex; gap:12px; margin-bottom:16px; align-items:flex-start; }
+    .msg.ai   { flex-direction:row; }
+    .msg.user { flex-direction:row-reverse; }
+    .avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .avatar.ai-av   { background:linear-gradient(135deg,#1565c0,#7c83fd); }
+    .avatar.user-av { background:linear-gradient(135deg,#1b5e20,#43a047); }
+    .bubble { max-width:78%; padding:12px 16px; border-radius:14px; font-size:0.85rem; line-height:1.7; }
+    .msg.ai   .bubble { background:#0d1b2a; border:1px solid rgba(100,160,255,0.2); color:#cfd8dc; border-radius:4px 14px 14px 14px; }
+    .msg.user .bubble { background:#0d3320; border:1px solid rgba(100,255,160,0.2); color:#c8e6c9; border-radius:14px 4px 14px 14px; }
+    .action-log { background:rgba(0,0,0,0.4); border-left:3px solid #7c83fd; border-radius:6px; padding:10px 14px; margin-top:10px; font-size:0.78rem; color:#7c83fd; font-family:monospace; }
+    .action-log span { color:#90a4ae; }
+    .review-box { background:rgba(21,101,192,0.15); border:1px solid rgba(100,160,255,0.3); border-radius:10px; padding:14px; margin-top:10px; }
+    .review-box .review-title { color:#90caf9; font-weight:700; margin-bottom:8px; font-size:0.88rem; }
+    .review-item { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.82rem; color:#90a4ae; }
+    .review-item:last-child { border-bottom:none; }
+    .btn-approve { background:#1b5e20; color:#81c784; border:1px solid #43a047; border-radius:6px; padding:3px 12px; font-size:0.75rem; cursor:pointer; }
+    .btn-edit    { background:#1a2744; color:#90caf9; border:1px solid #1565c0; border-radius:6px; padding:3px 12px; font-size:0.75rem; cursor:pointer; }
+    .tool-pill { display:inline-block; background:rgba(124,131,253,0.15); border:1px solid rgba(124,131,253,0.4); color:#7c83fd; border-radius:20px; padding:2px 10px; font-size:0.75rem; margin:3px; font-family:monospace; }
+    .voice-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(239,83,80,0.15); border:1px solid rgba(239,83,80,0.3); color:#ef9a9a; border-radius:20px; padding:4px 14px; font-size:0.8rem; }
+  </style>
+</head>
+<body>
+
+<a class="back" href="index.html">← Back to Portal</a>
+<h1 class="page-title">🤖 Agent Vision</h1>
+<p class="subtitle">JobHunter AI — The Complete Agentic Workflow</p>
+
+<!-- THE BIG IDEA -->
+<div class="section purple">
+  <h2>🎯 The Vision in One Paragraph</h2>
+  <p style="color:#e0e0e0;font-size:0.95rem;line-height:1.8;">
+    A <strong style="color:#ce93d8;">Job Finder Agent</strong> interviews you by voice and text.
+    As you talk, it autonomously calls this system's own APIs to build itself —
+    adding institutions, queuing jobs, building tailored resumes and cover letters,
+    and drafting submission emails with your documents attached.
+    Before anything is sent, it presents each item for your review.
+    You approve, edit, or ask follow-up questions. When you press Submit,
+    the agent sends your application — one at a time, reviewed and approved by you.
+    <strong style="color:#ce93d8;">You never manually fill a form. The conversation IS the workflow.</strong>
+  </p>
+</div>
+
+<!-- VOICE + TEXT -->
+<div class="section teal">
+  <h2>🎙️ Voice + Text Interface</h2>
+  <p style="color:#90a4ae;font-size:0.87rem;margin-bottom:14px;">
+    The agent accepts both voice (Web Speech API / Whisper) and typed input.
+    Responses are spoken back via text-to-speech and displayed in the chat.
+  </p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+    <span class="voice-badge">🎙️ Voice Input (Whisper / Web Speech)</span>
+    <span class="voice-badge">🔊 Voice Output (TTS)</span>
+    <span class="tool-pill">POST /api/agent/transcribe</span>
+    <span class="tool-pill">POST /api/agent/speak</span>
+  </div>
+</div>
+
+<!-- LIVE DEMO CONVERSATION -->
+<div class="section gold">
+  <h2>💬 Live Agent Session — Example Walkthrough</h2>
+  <div class="chat-demo">
+
+    <div class="msg ai">
+      <div class="avatar ai-av">🤖</div>
+      <div class="bubble">
+        Hi Fred! I'm your Job Finder Agent. I'll interview you, find matching jobs, build your resume, and prepare your applications — all from this conversation. Ready to start?<br/><br/>
+        <strong style="color:#ffd54f;">What type of position are you looking for?</strong>
+      </div>
+    </div>
+
+    <div class="msg user">
+      <div class="avatar user-av">👤</div>
+      <div class="bubble">I want to teach at a university. Part-time, preferably in St. Louis or remote. Computer Science or Finance.</div>
+    </div>
+
+    <div class="msg ai">
+      <div class="avatar ai-av">🤖</div>
+      <div class="bubble">
+        Perfect. Let me search for that right now.
+        <div class="action-log">
+          🔧 <span>Calling tool:</span> search_jobs("adjunct professor computer science St Louis")<br/>
+          🔧 <span>Calling tool:</span> search_jobs("part-time finance lecturer remote")<br/>
+          🔧 <span>Calling tool:</span> search_institutions("university St Louis CS finance hiring")<br/>
+          ✅ <span>Found 4 jobs, 3 new institutions</span>
+        </div>
+        <div style="margin-top:10px;">
+          I found some great matches. I'm adding these to your system now:<br/><br/>
+          <strong style="color:#ffd54f;">Institutions discovered:</strong><br/>
+          • UCLA Extension — Remote CS Adjunct opening<br/>
+          • Washington University St. Louis — Finance Lecturer<br/>
+          • UMSL — Part-time CS Instructor<br/><br/>
+          <div class="action-log">
+            🔧 <span>Calling tool:</span> add_institution("UCLA Extension", domain="University")<br/>
+            🔧 <span>Calling tool:</span> add_institution("Washington University St. Louis", domain="University")<br/>
+            🔧 <span>Calling tool:</span> add_institution("UMSL", domain="University")<br/>
+            🔧 <span>Calling tool:</span> add_job(title="CS Adjunct", institution="UCLA Extension", ...)<br/>
+            ✅ <span>3 institutions added · 4 jobs queued</span>
+          </div>
+          <br/><strong style="color:#ffd54f;">Tell me about your teaching experience.</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="msg user">
+      <div class="avatar user-av">👤</div>
+      <div class="bubble">I've been mentoring developers for 20 years. I teach cloud architecture and AI at work. I have a CS background and an MBA.</div>
+    </div>
+
+    <div class="msg ai">
+      <div class="avatar ai-av">🤖</div>
+      <div class="bubble">
+        Excellent background. I'm updating your profile and building resumes for each job now.
+        <div class="action-log">
+          🔧 <span>Calling tool:</span> update_profile(skills=["Cloud Architecture","AI","Python","MBA"])<br/>
+          🔧 <span>Calling tool:</span> build_resume(job_id=1, user_id=1)  → UCLA CS Adjunct<br/>
+          🔧 <span>Calling tool:</span> build_resume(job_id=2, user_id=1)  → WashU Finance Lecturer<br/>
+          🔧 <span>Calling tool:</span> build_resume(job_id=3, user_id=1)  → UMSL CS Instructor<br/>
+          🔧 <span>Calling tool:</span> draft_email(job_id=1, resume_id=1, attach_docs=True)<br/>
+          ✅ <span>3 resumes built · 3 emails drafted</span>
+        </div>
+        <br/>
+        Everything is ready for your review. Here's what I've prepared:
+        <div class="review-box">
+          <div class="review-title">📋 Ready for Review — 3 Applications</div>
+          <div class="review-item">
+            <span>📄 UCLA Extension — CS Adjunct · Resume + Cover Letter + Email</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-approve">✓ Approve</button>
+              <button class="btn-edit">✏️ Edit</button>
+            </div>
+          </div>
+          <div class="review-item">
+            <span>📄 WashU — Finance Lecturer · Resume + Cover Letter + Email</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-approve">✓ Approve</button>
+              <button class="btn-edit">✏️ Edit</button>
+            </div>
+          </div>
+          <div class="review-item">
+            <span>📄 UMSL — CS Instructor · Resume + Cover Letter + Email</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-approve">✓ Approve</button>
+              <button class="btn-edit">✏️ Edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- AGENT TOOLS -->
+<div class="section">
+  <h2>🔧 Agent Tool Belt — APIs the Agent Calls Autonomously</h2>
+  <p style="color:#90a4ae;font-size:0.87rem;margin-bottom:14px;">
+    The agent is given these tools as GPT function-calling definitions.
+    It decides when and how to call them based on the conversation.
+  </p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+    <span class="tool-pill">search_jobs(query, location)</span>
+    <span class="tool-pill">search_institutions(query)</span>
+    <span class="tool-pill">add_institution(name, domain, website)</span>
+    <span class="tool-pill">add_job(title, institution_id, url)</span>
+    <span class="tool-pill">update_profile(skills, experience, bio)</span>
+    <span class="tool-pill">build_resume(job_id)</span>
+    <span class="tool-pill">draft_email(job_id, resume_id)</span>
+    <span class="tool-pill">attach_document(email_id, doc_path)</span>
+    <span class="tool-pill">submit_application(application_id)</span>
+    <span class="tool-pill">transcribe_voice(audio_blob)</span>
+  </div>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+graph LR
+    Agent["🤖 Job Finder Agent\n(GPT-4o-mini + tools)"]
+
+    Agent -->|"search_jobs()"| JobsAPI["POST /api/jobs/search"]
+    Agent -->|"search_institutions()"| WebSearch["Web Search\n(Tavily API)"]
+    Agent -->|"add_institution()"| InstAPI["POST /api/institutions/"]
+    Agent -->|"add_job()"| JobsDB["POST /api/jobs/"]
+    Agent -->|"update_profile()"| ProfileAPI["PUT /api/profile/"]
+    Agent -->|"build_resume()"| ResumeAPI["POST /api/resumes/build"]
+    Agent -->|"draft_email()"| EmailAPI["POST /api/applications/draft"]
+    Agent -->|"submit_application()"| SubmitAPI["POST /api/applications/submit"]
+    </div>
+  </div>
+</div>
+
+<!-- FULL WORKFLOW -->
+<div class="section red">
+  <h2>🚀 End-to-End Agentic Workflow</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant Agent as Job Finder Agent
+    participant SystemAPI as System APIs
+    participant WebSearch as Web Search
+    participant Email as Email Service
+
+    User->>Agent: "I want to teach CS at a university"
+    Agent->>WebSearch: search_jobs("CS adjunct professor")
+    Agent->>WebSearch: search_institutions("university CS hiring")
+    WebSearch-->>Agent: 4 jobs, 3 institutions found
+    Agent->>SystemAPI: add_institution(UCLA, WashU, UMSL)
+    Agent->>SystemAPI: add_job(x3)
+    Agent-->>User: "Found 3 institutions, 4 jobs. Added to your system."
+
+    User->>Agent: "I have 20 years experience, CS + MBA"
+    Agent->>SystemAPI: update_profile(skills, experience)
+    Agent->>SystemAPI: build_resume(job_id=1)
+    Agent->>SystemAPI: build_resume(job_id=2)
+    Agent->>SystemAPI: build_resume(job_id=3)
+    Agent->>SystemAPI: draft_email(job_id=1, resume_id=1)
+    Agent-->>User: "3 resumes built, 3 emails drafted. Ready for review."
+
+    User->>Agent: "Approve UCLA application"
+    Agent->>SystemAPI: submit_application(app_id=1)
+    SystemAPI->>Email: Send email + resume + cover letter
+    Email-->>SystemAPI: Sent ✓
+    Agent-->>User: "✅ Application submitted to UCLA Extension"
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW FLOW -->
+<div class="section green">
+  <h2>✅ Review & Approval Flow</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+flowchart TD
+    AgentDrafts["Agent drafts:\n• Resume\n• Cover Letter\n• Email\n• Attachments"]
+    --> ReviewQueue["Presents to user\nfor review"]
+    --> Decision{{"User decision"}}
+
+    Decision -- "✓ Approve" --> Submit["Agent submits\napplication"]
+    Decision -- "✏️ Edit" --> EditChat["User gives feedback\nin chat"]
+    Decision -- "❓ Question" --> MoreQA["Agent asks\nfollow-up questions"]
+
+    EditChat --> Regenerate["Agent regenerates\nresume/letter/email"]
+    MoreQA --> Regenerate
+    Regenerate --> ReviewQueue
+
+    Submit --> Confirm["Confirmation sent\nto user + DB updated"]
+    </div>
+  </div>
+</div>
+
+<!-- KIRO PROMPT -->
+<div class="section purple">
+  <h2>🤖 Kiro Build Prompt — Agent Vision</h2>
+  <div class="prompt-box">
+    <strong>Use this prompt to build the Agent Vision with Kiro:</strong>
+    We are building the Job Finder Agent for JobHunter AI (Phase 2).
+    Phase 1 is complete: FastAPI backend, React frontend, SQLite, GPT-4o-mini resume builder.
+
+    The Agent is a conversational AI (voice + text) that:
+    1. Interviews the user using job templates (University, Bank, Tech, etc.)
+    2. Autonomously calls system APIs as tools (GPT function-calling):
+       - search_jobs, search_institutions (web search via Tavily)
+       - add_institution, add_job (POST to our own FastAPI)
+       - update_profile, build_resume, draft_email, submit_application
+    3. Surfaces discoveries mid-conversation with action logs shown in UI
+    4. Builds a review queue of resumes + cover letters + emails for user approval
+    5. Submits approved applications one at a time via email
+
+    New backend: InterviewSession model, agent service with GPT function-calling tools,
+    Tavily web search integration, email draft endpoint.
+    New frontend: Chat page with voice input (Web Speech API), action log feed,
+    review/approval panel.
+
+    Reference: Docs/agent_vision.html (full spec) and Docs/architecture.html (system context).
+  </div>
+</div>
+
+<footer>
+  <p>JobHunter AI &nbsp;|&nbsp; Agent Vision v1.0 &nbsp;|&nbsp; Built with Kiro AI</p>
+</footer>
+</body>
+</html>
