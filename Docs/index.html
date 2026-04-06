@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JobHunter AI — Project Portal</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<header>
+  <h1>🤖 JobHunter AI</h1>
+  <p>Intelligent Job Search, Resume Building &amp; Auto-Apply System</p>
+  <div class="badges">
+    <span class="badge">Python + FastAPI</span>
+    <span class="badge">React + Vite</span>
+    <span class="badge">SQLite</span>
+    <span class="badge">AI-Powered</span>
+    <span class="badge">Auto-Apply</span>
+  </div>
+</header>
+
+<div class="grid">
+
+  <a class="card" href="architecture.html">
+    <div class="card-icon">🏗️</div>
+    <div class="card-title">Architecture</div>
+    <div class="card-desc">Full system architecture with Mermaid diagrams. Component breakdown, data flow, API design, database schema, and module interactions.</div>
+    <span class="card-tag">System Design</span>
+  </a>
+
+  <a class="card green" href="domain.html">
+    <div class="card-icon">🌐</div>
+    <div class="card-title">Domain Manager</div>
+    <div class="card-desc">Select and manage domains — University, Bank, Insurance, Pharma, Tech and more. All searches and applications are scoped to the active domain.</div>
+    <span class="card-tag">Core Module</span>
+  </a>
+
+  <a class="card gold" href="job_scanner.html">
+    <div class="card-icon">🔍</div>
+    <div class="card-title">Job Scanner</div>
+    <div class="card-desc">Daily automated internet scan for open positions. Filters by domain, keywords, location, and seniority. Stores results in SQLite with deduplication.</div>
+    <span class="card-tag">Scheduler + Web Scraping</span>
+  </a>
+
+  <a class="card purple" href="resume_builder.html">
+    <div class="card-icon">📝</div>
+    <div class="card-title">Resume Builder</div>
+    <div class="card-desc">AI-assisted resume generator. Pulls your profile, tailors content to a specific job posting and institution. Exports to PDF and DOCX.</div>
+    <span class="card-tag">AI / LLM</span>
+  </a>
+
+  <a class="card red" href="auto_apply.html">
+    <div class="card-icon">🚀</div>
+    <div class="card-title">Auto Apply</div>
+    <div class="card-desc">Automatically submits applications to job postings. Tracks status, follow-ups, and responses. Supports email and web form submission.</div>
+    <span class="card-tag">Automation</span>
+  </a>
+
+  <a class="card teal" href="institution_search.html">
+    <div class="card-icon">🏛️</div>
+    <div class="card-title">Institution Search</div>
+    <div class="card-desc">Search and browse institutions within the active domain. Save favorites, view open positions, and track application history per institution.</div>
+    <span class="card-tag">Search + Discovery</span>
+  </a>
+
+  <a class="card orange" href="profile.html">
+    <div class="card-icon">👤</div>
+    <div class="card-title">User Profile</div>
+    <div class="card-desc">Your personal profile — skills, education, work history, publications, certifications. Feeds the resume builder and auto-apply system.</div>
+    <span class="card-tag">Profile / Client</span>
+  </a>
+
+  <a class="card" href="database.html">
+    <div class="card-icon">🗄️</div>
+    <div class="card-title">Database Schema</div>
+    <div class="card-desc">SQLite database design. Tables for users, domains, institutions, jobs, applications, resumes, and scan history. Full ERD diagram.</div>
+    <span class="card-tag">SQLite / SQLAlchemy</span>
+  </a>
+
+  <a class="card green" href="api.html">
+    <div class="card-icon">⚡</div>
+    <div class="card-title">API Reference</div>
+    <div class="card-desc">FastAPI backend endpoints. REST API design for all modules — domains, jobs, institutions, resumes, applications, and profile management.</div>
+    <span class="card-tag">FastAPI / REST</span>
+  </a>
+
+</div>
+
+<footer>
+  <p>JobHunter AI &nbsp;|&nbsp; Fred F. Jabbari &nbsp;|&nbsp; Built with Kiro AI</p>
+</footer>
+</body>
+</html>

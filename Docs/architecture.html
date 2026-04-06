@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Architecture — JobHunter AI</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+</head>
+<body>
+
+<a class="back" href="index.html">← Back to Portal</a>
+<h1 class="page-title">🏗️ System Architecture</h1>
+<p class="subtitle">JobHunter AI — Full Technical Design &amp; Data Flow</p>
+
+<!-- ── OVERVIEW ── -->
+<div class="section">
+  <h2>📐 System Overview</h2>
+  <p style="color:#90a4ae;font-size:0.88rem;line-height:1.7;margin-bottom:16px;">
+    JobHunter AI is a personal job hunting automation system. It scans the internet daily for job postings
+    matching your profile and domain, builds tailored resumes using AI, and automatically submits applications.
+    The system is domain-driven — everything is scoped to the active domain (University, Bank, Insurance, etc.).
+  </p>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+graph TB
+    User["👤 User (Fred Jabbari)"]
+
+    subgraph Frontend["React Frontend (Vite)"]
+        UI_Domain["Domain Selector"]
+        UI_Jobs["Job Board"]
+        UI_Resume["Resume Builder"]
+        UI_Apply["Application Tracker"]
+        UI_Profile["Profile Manager"]
+        UI_Inst["Institution Search"]
+    end
+
+    subgraph Backend["Python Backend (FastAPI)"]
+        API["REST API Layer"]
+        DomainSvc["Domain Service"]
+        JobSvc["Job Scanner Service"]
+        ResumeSvc["Resume Builder Service"]
+        ApplySvc["Auto-Apply Service"]
+        ProfileSvc["Profile Service"]
+        InstSvc["Institution Service"]
+        Scheduler["APScheduler (Daily Jobs)"]
+    end
+
+    subgraph Data["Data Layer"]
+        DB[("SQLite Database")]
+        FileStore["File Store (PDFs/DOCX)"]
+    end
+
+    subgraph External["External Services"]
+        WebScraper["Web Scraper (job boards)"]
+        LLM["LLM API (resume/cover letter)"]
+        EmailSvc["Email Service (SMTP)"]
+        JobBoards["Job Boards (LinkedIn, Indeed, etc.)"]
+    end
+
+    User --> Frontend
+    Frontend --> API
+    API --> DomainSvc & JobSvc & ResumeSvc & ApplySvc & ProfileSvc & InstSvc
+    Scheduler --> JobSvc & ApplySvc
+    JobSvc --> WebScraper --> JobBoards
+    ResumeSvc --> LLM
+    ApplySvc --> EmailSvc
+    DomainSvc & JobSvc & ResumeSvc & ApplySvc & ProfileSvc & InstSvc --> DB
+    ResumeSvc --> FileStore
+    </div>
+  </div>
+</div>
+
+<!-- ── TECH STACK ── -->
+<div class="section green">
+  <h2>🛠️ Technology Stack</h2>
+  <ul>
+    <li><strong>Frontend:</strong> React 18 + Vite, React Router, Axios, TailwindCSS</li>
+    <li><strong>Backend:</strong> Python 3.11+, FastAPI, SQLAlchemy ORM, Pydantic v2</li>
+    <li><strong>Database:</strong> SQLite (via SQLAlchemy), Alembic for migrations</li>
+    <li><strong>Scheduler:</strong> APScheduler — daily job scans at configurable time</li>
+    <li><strong>Web Scraping:</strong> Playwright + BeautifulSoup4 for job board scraping</li>
+    <li><strong>AI / LLM:</strong> OpenAI API (GPT-4) or local Ollama for resume tailoring</li>
+    <li><strong>Document Export:</strong> python-docx (DOCX), WeasyPrint (PDF)</li>
+    <li><strong>Email:</strong> smtplib / SendGrid for application submission</li>
+    <li><strong>Auth:</strong> Single-user, local JWT token (no cloud auth needed)</li>
+  </ul>
+</div>
+
+<!-- ── DOMAIN FLOW ── -->
+<div class="section gold">
+  <h2>🌐 Domain-Driven Flow</h2>
+  <p style="color:#90a4ae;font-size:0.88rem;margin-bottom:16px;">
+    The Domain is the top-level context. Every module — job search, resume, institutions — is filtered by the active domain.
+  </p>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+flowchart LR
+    SelectDomain["Select Domain\n(University / Bank / Insurance\nPharma / Tech / Other)"]
+    --> ActiveDomain[("Active Domain\nStored in Session + DB")]
+
+    ActiveDomain --> JobSearch["Job Scanner\nfiltered by domain"]
+    ActiveDomain --> InstSearch["Institution Search\nfiltered by domain"]
+    ActiveDomain --> ResumeGen["Resume Builder\ntailored to domain"]
+    ActiveDomain --> AutoApply["Auto Apply\nscoped to domain jobs"]
+
+    JobSearch & InstSearch & ResumeGen & AutoApply --> Results["Domain-Scoped Results"]
+    </div>
+  </div>
+</div>
+
+<!-- ── JOB SCANNER FLOW ── -->
+<div class="section teal">
+  <h2>🔍 Job Scanner — Daily Automation Flow</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+sequenceDiagram
+    participant Scheduler as APScheduler
+    participant Scanner as Job Scanner Service
+    participant Scraper as Web Scraper
+    participant Boards as Job Boards
+    participant DB as SQLite DB
+    participant UI as React Frontend
+
+    Scheduler->>Scanner: Trigger daily scan (configurable time)
+    Scanner->>DB: Load active domains + search keywords
+    Scanner->>Scraper: Request jobs for each domain/keyword
+    Scraper->>Boards: Scrape LinkedIn, Indeed, HigherEdJobs, etc.
+    Boards-->>Scraper: Raw job listings
+    Scraper-->>Scanner: Parsed job objects
+    Scanner->>DB: Deduplicate + store new jobs
+    Scanner->>DB: Mark stale jobs as expired
+    Scanner-->>UI: Notify new jobs available (websocket/poll)
+    UI->>DB: Fetch new job listings
+    </div>
+  </div>
+</div>
+
+<!-- ── RESUME BUILDER FLOW ── -->
+<div class="section purple">
+  <h2>📝 Resume Builder Flow</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+flowchart TD
+    Profile["User Profile\n(skills, experience, education)"]
+    JobPost["Selected Job Posting\n(title, description, requirements)"]
+    Domain["Active Domain\n(University / Bank / etc.)"]
+
+    Profile & JobPost & Domain --> LLM["LLM Prompt Engine\n(GPT-4 / Ollama)"]
+
+    LLM --> Draft["Generated Resume Draft\n+ Cover Letter"]
+    Draft --> Review["User Reviews & Edits\nin React UI"]
+    Review --> Export["Export Options"]
+    Export --> PDF["PDF Download"]
+    Export --> DOCX["DOCX Download"]
+    Export --> DB2[("Save to DB\n+ File Store")]
+    DB2 --> AutoApply["Ready for Auto-Apply"]
+    </div>
+  </div>
+</div>
+
+<!-- ── AUTO APPLY FLOW ── -->
+<div class="section red">
+  <h2>🚀 Auto-Apply Flow</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+flowchart TD
+    Jobs["New Jobs in DB\n(status: new)"]
+    --> Filter["Filter: matches user\npreferences + domain"]
+    --> Approve{{"User Approval\nRequired?"}}
+
+    Approve -- "Auto mode ON" --> BuildResume["Build Tailored Resume\n+ Cover Letter"]
+    Approve -- "Manual mode" --> UserReview["User Reviews Job\nin UI"]
+    UserReview -- "Approved" --> BuildResume
+
+    BuildResume --> Method{{"Application\nMethod"}}
+    Method -- "Email" --> SendEmail["Send Email\nwith Resume attached"]
+    Method -- "Web Form" --> FormFill["Playwright fills\nonline application form"]
+    Method -- "Portal" --> PortalLink["Open portal URL\nfor manual submission"]
+
+    SendEmail & FormFill --> UpdateDB["Update DB:\nstatus = applied\ndate + method logged"]
+    UpdateDB --> Track["Application Tracker\nin React UI"]
+    </div>
+  </div>
+</div>
+
+<!-- ── DATABASE SCHEMA ── -->
+<div class="section">
+  <h2>🗄️ Database Schema (ERD)</h2>
+  <div class="mermaid-wrap">
+    <div class="mermaid">
+erDiagram
+    USERS {
+        int id PK
+        string name
+        string email
+        string phone
+        text bio
+        datetime created_at
+    }
+    DOMAINS {
+        int id PK
+        string name
+        string description
+        bool is_active
+        datetime created_at
+    }
+    INSTITUTIONS {
+        int id PK
+        int domain_id FK
+        string name
+        string website
+        string location
+        string type
+        bool is_favorite
+        datetime created_at
+    }
+    JOBS {
+        int id PK
+        int domain_id FK
+        int institution_id FK
+        string title
+        text description
+        string location
+        string url
+        string status
+        date posted_date
+        date expires_date
+        datetime scanned_at
+    }
+    RESUMES {
+        int id PK
+        int user_id FK
+        int job_id FK
+        string version
+        text content_json
+        string pdf_path
+        string docx_path
+        datetime created_at
+    }
+    APPLICATIONS {
+        int id PK
+        int user_id FK
+        int job_id FK
+        int resume_id FK
+        string status
+        string method
+        datetime applied_at
+        text notes
+    }
+    SCAN_HISTORY {
+        int id PK
+        int domain_id FK
+        datetime scan_time
+        int jobs_found
+        int jobs_new
+        string status
+    }
+    PROFILE_SKILLS {
+        int id PK
+        int user_id FK
+        string skill
+        string level
+    }
+    PROFILE_EXPERIENCE {
+        int id PK
+        int user_id FK
+        string company
+        string title
+        date start_date
+        date end_date
+        text description
+    }
+
+    USERS ||--o{ RESUMES : creates
+    USERS ||--o{ APPLICATIONS : submits
+    USERS ||--o{ PROFILE_SKILLS : has
+    USERS ||--o{ PROFILE_EXPERIENCE : has
+    DOMAINS ||--o{ INSTITUTIONS : contains
+    DOMAINS ||--o{ JOBS : has
+    DOMAINS ||--o{ SCAN_HISTORY : tracks
+    INSTITUTIONS ||--o{ JOBS : posts
+    JOBS ||--o{ RESUMES : generates
+    JOBS ||--o{ APPLICATIONS : receives
+    RESUMES ||--o{ APPLICATIONS : used_in
+    </div>
+  </div>
+</div>
+
+<!-- ── FOLDER STRUCTURE ── -->
+<div class="section orange">
+  <h2>📁 Project Folder Structure</h2>
+  <pre>
+ApplyForJob/
+├── Docs/                        # Architecture & design docs (this folder)
+│   ├── index.html
+│   ├── styles.css
+│   ├── architecture.html
+│   └── ...
+├── backend/                     # Python FastAPI backend
+│   ├── main.py                  # FastAPI app entry point
+│   ├── database.py              # SQLAlchemy setup
+│   ├── models/                  # DB models
+│   │   ├── user.py
+│   │   ├── domain.py
+│   │   ├── job.py
+│   │   ├── institution.py
+│   │   ├── resume.py
+│   │   └── application.py
+│   ├── routers/                 # API route handlers
+│   │   ├── domains.py
+│   │   ├── jobs.py
+│   │   ├── institutions.py
+│   │   ├── resumes.py
+│   │   ├── applications.py
+│   │   └── profile.py
+│   ├── services/                # Business logic
+│   │   ├── job_scanner.py       # Web scraping + dedup
+│   │   ├── resume_builder.py    # LLM integration
+│   │   ├── auto_apply.py        # Application submission
+│   │   └── scheduler.py         # APScheduler setup
+│   ├── scrapers/                # Per-site scrapers
+│   │   ├── linkedin.py
+│   │   ├── indeed.py
+│   │   ├── higheredjobs.py
+│   │   └── base_scraper.py
+│   └── requirements.txt
+├── frontend/                    # React + Vite frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── JobBoard.jsx
+│   │   │   ├── ResumeBuilder.jsx
+│   │   │   ├── Applications.jsx
+│   │   │   ├── Institutions.jsx
+│   │   │   └── Profile.jsx
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+├── data/
+│   └── jobhunter.db             # SQLite database
+└── README.md
+  </pre>
+</div>
+
+<!-- ── API ENDPOINTS ── -->
+<div class="section">
+  <h2>⚡ Key API Endpoints</h2>
+  <pre>
+# Domains
+GET    /api/domains              # List all domains
+POST   /api/domains              # Create domain
+PUT    /api/domains/{id}/activate # Set active domain
+
+# Jobs
+GET    /api/jobs                 # List jobs (filtered by active domain)
+GET    /api/jobs/{id}            # Job detail
+POST   /api/jobs/scan            # Trigger manual scan
+GET    /api/jobs/new             # Jobs found since last visit
+
+# Institutions
+GET    /api/institutions         # List institutions in active domain
+POST   /api/institutions         # Add institution
+PUT    /api/institutions/{id}/favorite  # Toggle favorite
+
+# Resume
+POST   /api/resumes/build        # Generate resume for a job
+GET    /api/resumes/{id}/pdf     # Download PDF
+GET    /api/resumes/{id}/docx    # Download DOCX
+
+# Applications
+GET    /api/applications         # List all applications
+POST   /api/applications         # Submit application
+PUT    /api/applications/{id}    # Update status/notes
+
+# Profile
+GET    /api/profile              # Get user profile
+PUT    /api/profile              # Update profile
+POST   /api/profile/skills       # Add skill
+POST   /api/profile/experience   # Add experience
+  </pre>
+</div>
+
+<!-- ── KIRO PROMPT ── -->
+<div class="section teal">
+  <h2>🤖 Kiro Build Prompt</h2>
+  <div class="prompt-box">
+    <strong>Use this prompt to start coding with Kiro:</strong>
+    Build the JobHunter AI system based on this architecture document.
+    Start with: 1) Backend FastAPI skeleton with SQLAlchemy models and all routers.
+    2) React frontend with Vite, React Router, and page stubs for all modules.
+    3) SQLite database with all tables from the ERD.
+    4) Job scanner service with APScheduler.
+    5) Resume builder service with LLM integration.
+    The system is domain-driven — active domain scopes all queries.
+    User profile: Fred F. Jabbari, St. Louis MO, software/finance/real estate background.
+    First target domain: University (part-time teaching positions).
+  </div>
+</div>
+
+<footer>
+  <p>JobHunter AI &nbsp;|&nbsp; Architecture v1.0 &nbsp;|&nbsp; Built with Kiro AI</p>
+</footer>
+</body>
+</html>

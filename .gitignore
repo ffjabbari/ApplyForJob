@@ -1,0 +1,27 @@
+# Environment
+.env
+
+# Database and generated files
+data/jobhunter.db
+data/resumes/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pyenv/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# macOS
+.DS_Store
+
+# Logs
+README.TXT
