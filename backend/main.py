@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from backend.database import init_db
 from backend.services.scheduler import start_scheduler, stop_scheduler
-from backend.routers import domains, jobs, institutions, resumes, applications, profile
+from backend.routers import domains, jobs, institutions, resumes, applications, profile, agent
 
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ app.include_router(institutions.router)
 app.include_router(resumes.router)
 app.include_router(applications.router)
 app.include_router(profile.router)
+app.include_router(agent.router)
 
 
 @app.get("/")

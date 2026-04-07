@@ -5,9 +5,11 @@ import ResumeBuilder from './pages/ResumeBuilder'
 import Applications from './pages/Applications'
 import Institutions from './pages/Institutions'
 import Profile from './pages/Profile'
+import Agent from './pages/Agent'
 
 const nav = [
   { to: '/',             icon: '🏠', label: 'Dashboard' },
+  { to: '/agent',        icon: '🤖', label: 'Job Finder Agent' },
   { to: '/jobs',         icon: '🔍', label: 'Job Board' },
   { to: '/resumes',      icon: '📝', label: 'Resumes' },
   { to: '/applications', icon: '🚀', label: 'Applications' },
@@ -29,6 +31,7 @@ export default function App() {
       <main className="main">
         <Routes>
           <Route path="/"             element={<Dashboard />} />
+          <Route path="/agent"        element={<Agent />} />
           <Route path="/jobs"         element={<JobBoard />} />
           <Route path="/resumes"      element={<ResumeBuilder />} />
           <Route path="/applications" element={<Applications />} />
